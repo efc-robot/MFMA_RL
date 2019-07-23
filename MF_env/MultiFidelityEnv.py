@@ -114,7 +114,7 @@ class MultiFidelityEnv(Env):
         self.time_history = []
         self.action_history = []
 
-    def rollout(self, policy_call_back, control_fps, done_call_back = None, pause_call_back = None):
+    def rollout(self, policy_call_back, control_fps, finish_call_back = None, pause_call_back = None):
         # setting control_fps timmer threading
         self.fps_event = threading.Event()
         self.fps_stop_event = threading.Event()
@@ -144,11 +144,11 @@ class MultiFidelityEnv(Env):
                         return 'pause'
 
                 # check whether we should stop one rollout
-                done = False
-                if done_call_back is not None:
-                    done = done_call_back(new_state)
-                done = done or (total_time > self.time_limit)
-                if done:
+                finish = False
+                if finish_call_back is not None:
+                    finish = finish_call_back(new_state)
+                finish = finish or (total_time > self.time_limit)
+                if finish:
                     self.backend.pause()
                     self.fps_stop_event.set()
                     return 'finish'

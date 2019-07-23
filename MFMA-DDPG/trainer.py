@@ -5,12 +5,9 @@ import torch
 import gym
 from copy import deepcopy
 
-from MFMA.make_env import make_env
 
 from arguments import Singleton_arger
 from logger import Singleton_logger
-from evaluator import Singleton_evaluator
-
 from ddpg import DDPG
 
 class DDPG_trainer(object):
@@ -23,33 +20,11 @@ class DDPG_trainer(object):
         self.nb_warmup_steps = train_args['nb_warmup_steps']
         self.train_mode = train_args['train_mode']
         
-    def setup(self):
+    def setup(self,env_instance,agent):
         main_args = Singleton_arger()['main']
-        Singleton_logger.setup(main_args['result_dir'],multi_process = main_args['multi_process'])
-
-        Singleton_evaluator.setup(main_args['env'], logger = Singleton_logger, num_episodes = 10, model_dir = main_args['result_dir'], multi_process = main_args['multi_process'], visualize = False, rand_seed = main_args['rand_seed'])
-        self.env = make_env(main_args['env'],timelimit = 300)
- 
-        nb_actions = self.env.action_space[0].shape[0]
-        nb_pos = 5 
-        nb_laser = 32
-
-        exploration_args = Singleton_arger()['exploration']
-        if exploration_args['action_noise']:
-            self.agent = action_noise_DDPG()
-        elif exploration_args['parameter_noise']:
-            self.agent = parameter_noise_DDPG()
-        elif exploration_args['SGLD_mode'] > 0:
-            self.agent = SGLD_DDPG()
-        else:
-            self.agent = DDPG()
-            
-        self.agent.setup(nb_pos,nb_laser, nb_actions)
-        
-        self.action_scale = (self.env.action_space[0].high - self.env.action_space[0].low)/2.0
-        self.action_bias = (self.env.action_space[0].high + self.env.action_space[0].low)/2.0
-        
-        self.action_space = self.env.action_space
+        Singleton_logger.setup(main_args['result_dir'])
+        self.env = env_instance
+        self.agent = agent
         self.result_dir = main_args['result_dir']
         self.reset()
         
@@ -64,11 +39,7 @@ class DDPG_trainer(object):
         self.last_info =  deepcopy(info)
         self.agent.reset_noise()
         
-    def warmup(self):
-        for warmup_step in range(self.nb_warmup_steps):
-            #pick action by actor randomly
-            self.apply_action(self.action_space.sample())
-                
+
     def train(self):
         for epoch in range(self.nb_epoch):
             #apply hyperparameter decay
@@ -157,13 +128,3 @@ class DDPG_trainer(object):
             self.last_episode_length = self.current_episode_length
             self.current_episode_reward = 0.
             self.current_episode_length = 0
-            
-    def __del__(self):
-        Singleton_evaluator.trigger_close()
-        Singleton_logger.trigger_close()
-
-if __name__ == "__main__":
-    trainer = DDPG_trainer()
-    trainer.setup()
-    trainer.warmup()
-    trainer.train()
