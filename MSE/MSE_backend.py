@@ -68,6 +68,7 @@ class MSE_backend(object):
                 elif item[0] == 'get_obs':
                     data_queue.put(self.world.get_obs())
                 elif item[0] == 'set_state':
+                    self.world.reset()
                     self.world.set_state(item[1][0],item[1][1])
                 elif item[0] == 'set_action':
                     self.world.set_action(item[1][0],item[1][1])
@@ -93,10 +94,10 @@ class MSE_backend(object):
         all_state = self.data_queue.get()
         return all_state
 
-    def set_state(self,state,enable_list = None):
+    def set_state(self,state,enable_list = None,reset = False):
         if enable_list is None:
             enable_list = [True]* len(state)
-        self.common_queue.put(['set_state',(enable_list,state)])
+        self.common_queue.put(['set_state',(enable_list,state,reset)])
 
     def get_obs(self):
         self.common_queue.put(['get_obs',None])
