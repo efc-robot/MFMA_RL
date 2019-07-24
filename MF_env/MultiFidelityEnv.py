@@ -70,10 +70,12 @@ class MultiFidelityEnv(Env):
                 state_list[idx] = self._random_state()
         return state_list
 
-    def _calc_reward(self,new_state_list,old_state_list):
+    def _calc_reward(self,new_state_list,old_state_list,delta_time):
         reward_list = []
-        for new_state,old_state in zip(new_state_list,old_state_list):
-            re = self.reward_coef['time_penalty']
+        for idx in range(len(new_state_list)):
+            new_state = new_state_list[idx]
+            old_state = old_state_list[idx]
+            re = self.reward_coef['time_penalty']*delta_time
             if new_state.crash:
                 re += self.reward_coef['crash']
             if new_state.reach:
@@ -108,14 +110,13 @@ class MultiFidelityEnv(Env):
 
     def reset_rollout(self):
         self.backend.pause()
-        self.backend.set_state(self._reset_state())
+        self.backend.set_state(self._reset_state(),[True,]*len(self._reset_state()),True)
         self.state_history = []
         self.obs_history = []
         self.time_history = []
         self.action_history = []
 
     def rollout(self, policy_call_back, control_fps, finish_call_back = None, pause_call_back = None):
-        print('start')
         # setting control_fps timmer threading
         self.fps_event = threading.Event()
         self.fps_stop_event = threading.Event()
@@ -125,7 +126,6 @@ class MultiFidelityEnv(Env):
         # start backend
         self.backend.go_on()
         while True:
-            print('while true')
             if self.fps_event.is_set():
                 self.fps_event.clear()
                 # get new state, new obs, and calculate action 
@@ -135,9 +135,6 @@ class MultiFidelityEnv(Env):
                 self.state_history.append(new_state)
                 self.obs_history.append(new_obs)
                 self.time_history.append(total_time)
-
-
-                print('pause')
                 # check whether we should pause rollout
                 if pause_call_back is not None:
                     if pause_call_back(new_state):
@@ -150,7 +147,6 @@ class MultiFidelityEnv(Env):
                 if finish_call_back is not None:
                     finish = finish_call_back(new_state)
                 finish = finish or (total_time > self.time_limit)
-                print('finish')
                 if finish:
                     self.backend.pause()
                     self.fps_stop_event.set()
@@ -170,13 +166,30 @@ class MultiFidelityEnv(Env):
             done = [state.movable for state in self.state_history[idx]]
             time = self.time_history[idx]
             action = self.action_history[idx]
-            reward = self._calc_reward(self.state_history[idx],self.state_history[idx+1])
+            reward = self._calc_reward(self.state_history[idx],self.state_history[idx+1],self.time_history[idx+1]-self.time_history[idx])
             transition = {'obs':obs,'action':action,'reward': reward, 'obs_next':obs_next, 'done':done, 'time':time}
             trajectoy.append(copy.deepcopy(transition))
         return trajectoy
 
     def get_result(self):
-        pass
+        vel_list = []
+        result = {}
+        crash_time = 0
+        reach_time = 0
+        for state_list in self.state_history:
+            for state in state_list:
+                vel_list.append(abs(state.vel_b))
+                if state.crash:
+                    crash_time+=1
+                if state.reach:
+                    reach_time+=1
+        result['crash_time'] = crash_time
+        result['reach_time'] = reach_time
+        result['mean_vel'] = sum(vel_list)/len(vel_list)
+        result['total_time'] = self.time_history[-1]-self.time_history[0]
+        return result
+
+                
 
     def close(self):
         self.backend.close()

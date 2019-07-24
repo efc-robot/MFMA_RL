@@ -68,7 +68,8 @@ class MSE_backend(object):
                 elif item[0] == 'get_obs':
                     data_queue.put(self.world.get_obs())
                 elif item[0] == 'set_state':
-                    self.world.reset()
+                    if item[1][2]:
+                        self.world.reset()
                     self.world.set_state(item[1][0],item[1][1])
                 elif item[0] == 'set_action':
                     self.world.set_action(item[1][0],item[1][1])

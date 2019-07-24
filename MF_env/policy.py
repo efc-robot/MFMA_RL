@@ -5,19 +5,22 @@ import os
 import io
 import copy
 import ctypes
+import random
 from . import basic
 
 class NN_policy(object):
-    def __init__(self,policy_args):
-        self.actor = copy.deepcopy(policy_args)
-    
+    def __init__(self,actor,epsilon):
+        self.actor = copy.deepcopy(actor)   
+        self.epsilon = epsilon 
     def inference(self,obs_list):
         with torch.no_grad():
             pos = torch.Tensor(np.vstack([obs.pos for obs in obs_list])).cuda()
             laser_data = torch.Tensor(np.vstack([obs.laser_data for obs in obs_list])).cuda()
             
             action = self.actor(pos,laser_data).cpu().numpy()
-            action = np.clip(action, -1., 1.)
+        if random.random() <self.epsilon:
+            action = np.random.normal(0,1,action.shape)
+        action = np.clip(action, -1., 1.)
         action_list = []
         for idx in range(action.shape[0]):
             a = basic.Action()

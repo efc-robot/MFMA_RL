@@ -14,7 +14,6 @@ class DDPG(object):
         self.critic_lr = agent_args['critic_lr']
         self.lr_decay = agent_args['lr_decay']
         self.l2_critic = agent_args['l2_critic']
-        self.batch_size = agent_args['batch_size']
         self.discount = agent_args['discount']
         self.tau = agent_args['tau']
         self.with_cuda = agent_args['with_cuda']
@@ -41,15 +40,6 @@ class DDPG(object):
         self.critic_optim  = Adam(params = p_groups, lr=self.critic_lr, weight_decay = self.l2_critic)
         self.actor_optim  = Adam(self.actor.parameters(), lr=self.actor_lr)
         
-    def reset_noise(self):
-        pass
-        
-    def before_epoch(self):
-        pass
-    
-    def before_cycle(self):
-        pass
-
     def update_critic(self, batch):
         tensor_obs0 = batch['obs0']
         tensor_obs1 = batch['obs1']

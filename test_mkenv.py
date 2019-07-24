@@ -38,10 +38,11 @@ class naive_policy(object):
         return action_list
 
 def check_done(state_list):
-    all_done = True
+
     for state in state_list:
-        all_done = all_done and not state.movable
-    return all_done
+        if state.movable :
+            return False
+    return True
 
 def policy(obs):
     a = basic.Action()
@@ -51,20 +52,20 @@ def policy(obs):
 
 policy_args={}
 policy_args['max_phi'] = math.pi/6.0
-policy_args['l'] = 0.4
+policy_args['l'] = 0.14
 policy_args['dist'] = 0.1
 
 
 n_policy = naive_policy(policy_args)
 
-fps = 10.0
-dt = 0.1
+fps = 100.0
+dt = 0.02
 ctrl_fps = 10.0
 scenario = parse_senario('./scenario/scenario.yaml')
 back_end = MSE_backend.MSE_backend(scenario,fps,dt)
 env = MultiFidelityEnv.MultiFidelityEnv(scenario,back_end)
 env.reset_rollout()
-env.rollout(n_policy.inference,ctrl_fps,check_done)
+env.rollout(n_policy.inference,ctrl_fps)
 trajectoy = env.get_trajectoy()
-print(trajectoy[0])
+print(env.get_result())
 env.close()

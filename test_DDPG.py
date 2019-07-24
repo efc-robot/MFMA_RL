@@ -14,8 +14,8 @@ import math
 
 
 
-fps = 10.0
-dt = 0.1
+fps = 100.0
+dt = 0.02
 ctrl_fps = 10.0
 scenario = parse_senario('./scenario/scenario.yaml')
 back_end = MSE_backend.MSE_backend(scenario,fps,dt)
