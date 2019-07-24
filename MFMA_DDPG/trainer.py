@@ -59,6 +59,7 @@ class DDPG_trainer(object):
             print(results)
             for key,value in results.items():
                 Singleton_logger.add_scalar(key,value,total_cycle)
+            Singleton_logger.save_dict()
             self.agent.save_model(self.result_dir)
 
     def apply_train(self):

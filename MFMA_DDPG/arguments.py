@@ -9,7 +9,7 @@ class Args(object):
         parser = argparse.ArgumentParser(description='DDPG on pytorch')
         #Exp & Dir name 
         parser.add_argument('--output', default='results/', type=str, help='result output dir')
-        parser.add_argument('--env', default='MAC_4', type=str, help='open-ai gym environment')
+        parser.add_argument('--env', default='MAC', type=str, help='open-ai gym environment')
         parser.add_argument('--exp-name', default='0', type=str, help='exp dir name')
         parser.add_argument('--result-dir',default=None, type=str, help='whole result dir name')
         
