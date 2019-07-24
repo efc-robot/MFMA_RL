@@ -4,7 +4,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.optim import Adam
-from model import Actor,Critic
+from .model import Actor,Critic
+
+
 
 class DDPG(object):
     def __init__(self,agent_args):

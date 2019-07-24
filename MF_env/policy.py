@@ -3,18 +3,29 @@ import math
 import numpy as np
 import os
 import io
+import copy
 import ctypes
 from . import basic
 
 class NN_policy(object):
     def __init__(self,policy_args):
-        self.actor = torch.load(policy_args)
+        self.actor = copy.deepcopy(policy_args)
     
-    def inference(self,obs):
+    def inference(self,obs_list):
         with torch.no_grad():
-            action = self.actor(obs).cpu().numpy()
+            pos = torch.Tensor(np.vstack([obs.pos for obs in obs_list])).cuda()
+            laser_data = torch.Tensor(np.vstack([obs.laser_data for obs in obs_list])).cuda()
+            
+            action = self.actor(pos,laser_data).cpu().numpy()
             action = np.clip(action, -1., 1.)
-        return action
+        action_list = []
+        for idx in range(action.shape[0]):
+            a = basic.Action()
+            a.ctrl_vel = action[idx,0]
+            a.ctrl_phi = action[idx,1]
+            action_list.append(a)
+        return action_list
+        
 
 
 class naive_policy(object):

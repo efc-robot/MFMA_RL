@@ -51,7 +51,7 @@ class Memory(object):
         self._nb_entries = 0
         
     def append(self, obs0, action, reward, obs1, terminal1):
-        for item_idx in enumerate(obs0):
+        for item_idx in range(len(obs0)):
             self.data_buffer['obs0'][item_idx][self._next_entry] = torch.as_tensor(obs0[item_idx])
             self.data_buffer['obs1'][item_idx][self._next_entry] = torch.as_tensor(obs1[item_idx])
         self.data_buffer['actions'][self._next_entry] = torch.as_tensor(action)

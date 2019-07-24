@@ -63,8 +63,8 @@ ctrl_fps = 10.0
 scenario = parse_senario('./scenario/scenario.yaml')
 back_end = MSE_backend.MSE_backend(scenario,fps,dt)
 env = MultiFidelityEnv.MultiFidelityEnv(scenario,back_end)
-env.rollout_reset()
+env.reset_rollout()
 env.rollout(n_policy.inference,ctrl_fps,check_done)
 trajectoy = env.get_trajectoy()
-
+print(trajectoy[0])
 env.close()
