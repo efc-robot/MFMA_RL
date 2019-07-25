@@ -4,6 +4,7 @@ import numpy as np
 import math
 import threading
 import time
+from itertools import product
 from .basic import Agent,Action,AgentState
 
 class MultiFidelityEnv(Env):
@@ -15,6 +16,8 @@ class MultiFidelityEnv(Env):
         self.reset_mode = senario_dict['common']['reset_mode']
         self.field_range = senario_dict['common']['field_range']
         self.ref_state_list = []
+        self.ref_agent_list = []
+        self.agent_num = 0
         for (_,grop) in self.senario_dict['agent_groups'].items():
             for agent_prop in grop:
                 agent = Agent(agent_prop)
@@ -28,28 +31,51 @@ class MultiFidelityEnv(Env):
                 state.target_x = agent.init_target_x
                 state.target_y = agent.init_target_y
                 state.crash = False
-                state.reach = False    
+                state.reach = False
                 self.ref_state_list.append(state)
+                self.ref_agent_list.append(agent)
+                self.agent_num+=1
 
     def _random_reset(self,new_state):
         state_list  = copy.deepcopy(new_state)
-        enable_list = [False] * len(state_list)
-        enable_tmp = False
-        for idx,state in enumerate(new_state):
-            if state.reach :
+        enable_list = [state.crash|state.reach for  state in state_list]
+        enable_tmp = True in enable_list
+        
+        crash_idx_list = []
+        for idx ,state in enumerate(state_list):
+            if state.crash: crash_idx_list.append(idx)
+                
+        if len(crash_idx_list)>0:
+            #try random place agent for 20 times
+            for idx in crash_idx_list:
+                state_list[idx].crash = False
+                state_list[idx].movable = True
+            for try_time in range(20):
+                for idx in crash_idx_list:
+                    state_list[idx].x = np.random.uniform(self.field_range[0],self.field_range[1])
+                    state_list[idx].y = np.random.uniform(self.field_range[2],self.field_range[3])
+                no_conflict = True
+                for idx_a,idx_b in product(range(self.agent_num),range(self.agent_num)):
+                    if idx_a == idx_b: continue
+                    state_a = state_list[idx_a]
+                    state_b = state_list[idx_b]
+                    agent_dist = ((state_a.x-state_b.x)**2+(state_a.y-state_b.y)**2)
+                    agent_size = (self.ref_agent_list[idx_a].R_safe+self.ref_agent_list[idx_b].R_safe)**2
+                    no_conflict = agent_dist < agent_size
+                    if not no_conflict : break
+                if no_conflict: break
+
+        reach_idx_list = []
+        for idx ,state in enumerate(state_list):
+            if state.reach: reach_idx_list.append(idx)
+        if len(reach_idx_list)>0:
+            for idx in reach_idx_list:
                 state_list[idx].reach = False
                 state_list[idx].movable = True
                 state_list[idx].target_x = np.random.uniform(self.field_range[0],self.field_range[1])
                 state_list[idx].target_y = np.random.uniform(self.field_range[2],self.field_range[3])
-                enable_list[idx] = True
-                enable_tmp = True
-            if state.crash :
-                state_list[idx].crash = False
-                state_list[idx].movable = True
-                state_list[idx].x = np.random.uniform(self.field_range[0],self.field_range[1])
-                state_list[idx].y = np.random.uniform(self.field_range[2],self.field_range[3])
-                enable_list[idx] = True
-                enable_tmp = True
+
+
         return enable_tmp,state_list,enable_list
 
     def _random_state(self):
@@ -70,10 +96,12 @@ class MultiFidelityEnv(Env):
                 state_list[idx] = self._random_state()
         return state_list
 
-    def _calc_reward(self,new_state_list,old_state_list):
+    def _calc_reward(self,new_state_list,old_state_list,delta_time):
         reward_list = []
-        for new_state,old_state in zip(new_state_list,old_state_list):
-            re = self.reward_coef['time_penalty']
+        for idx in range(len(new_state_list)):
+            new_state = new_state_list[idx]
+            old_state = old_state_list[idx]
+            re = self.reward_coef['time_penalty']*delta_time
             if new_state.crash:
                 re += self.reward_coef['crash']
             if new_state.reach:
@@ -106,22 +134,21 @@ class MultiFidelityEnv(Env):
             time.sleep(t)
 
 
-    def rollout_reset(self):
+    def reset_rollout(self):
         self.backend.pause()
-        self.backend.set_state(self._reset_state())
+        self.backend.set_state(self._reset_state(),[True,]*len(self._reset_state()),True)
         self.state_history = []
         self.obs_history = []
         self.time_history = []
         self.action_history = []
 
-    def rollout(self, policy_call_back, control_fps, done_call_back = None, pause_call_back = None):
+    def rollout(self, policy_call_back, control_fps, finish_call_back = None, pause_call_back = None):
         # setting control_fps timmer threading
         self.fps_event = threading.Event()
         self.fps_stop_event = threading.Event()
         self.fps_event.set()
         fps_t = threading.Thread(target=self._fps_func,args=(1.0/control_fps,self.fps_event,self.fps_stop_event))
         fps_t.start()
-        
         # start backend
         self.backend.go_on()
         while True:
@@ -134,8 +161,6 @@ class MultiFidelityEnv(Env):
                 self.state_history.append(new_state)
                 self.obs_history.append(new_obs)
                 self.time_history.append(total_time)
-                
-
                 # check whether we should pause rollout
                 if pause_call_back is not None:
                     if pause_call_back(new_state):
@@ -144,11 +169,11 @@ class MultiFidelityEnv(Env):
                         return 'pause'
 
                 # check whether we should stop one rollout
-                done = False
-                if done_call_back is not None:
-                    done = done_call_back(new_state)
-                done = done or (total_time > self.time_limit)
-                if done:
+                finish = False
+                if finish_call_back is not None:
+                    finish = finish_call_back(new_state)
+                finish = finish or (total_time > self.time_limit)
+                if finish:
                     self.backend.pause()
                     self.fps_stop_event.set()
                     return 'finish'
@@ -167,13 +192,30 @@ class MultiFidelityEnv(Env):
             done = [state.movable for state in self.state_history[idx]]
             time = self.time_history[idx]
             action = self.action_history[idx]
-            reward = self._calc_reward(self.state_history[idx],self.state_history[idx+1])
+            reward = self._calc_reward(self.state_history[idx],self.state_history[idx+1],self.time_history[idx+1]-self.time_history[idx])
             transition = {'obs':obs,'action':action,'reward': reward, 'obs_next':obs_next, 'done':done, 'time':time}
             trajectoy.append(copy.deepcopy(transition))
         return trajectoy
 
     def get_result(self):
-        pass
+        vel_list = []
+        result = {}
+        crash_time = 0
+        reach_time = 0
+        for state_list in self.state_history:
+            for state in state_list:
+                vel_list.append(abs(state.vel_b))
+                if state.crash:
+                    crash_time+=1
+                if state.reach:
+                    reach_time+=1
+        result['crash_time'] = crash_time
+        result['reach_time'] = reach_time
+        result['mean_vel'] = sum(vel_list)/len(vel_list)
+        result['total_time'] = self.time_history[-1]-self.time_history[0]
+        return result
+
+                
 
     def close(self):
         self.backend.close()

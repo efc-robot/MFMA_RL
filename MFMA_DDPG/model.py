@@ -31,8 +31,7 @@ class Actor(nn.Module):
         self.fc2.weight.data = fanin_init(self.fc2.weight.data.size())
         self.fc3.weight.data.uniform_(-init_w, init_w)
     
-    def forward(self, x):
-        pos,laser = x
+    def forward(self, pos,laser):
         out = self.fc1(laser)
         if self.layer_norm :
             out = self.LN1(out)
@@ -64,13 +63,12 @@ class Critic(nn.Module):
         self.fc2.weight.data = fanin_init(self.fc2.weight.data.size())
         self.fc3.weight.data.uniform_(-init_w, init_w)
     
-    def forward(self, xs):
-        pos,laser, a = xs
+    def forward(self, pos,laser, action):
         out = self.fc1(laser)
         if self.layer_norm :
             out = self.LN1(out)
         out = self.relu(out)
-        out = self.fc2(torch.cat([out,pos,a],1))
+        out = self.fc2(torch.cat([out,pos,action],1))
         if self.layer_norm :
             out = self.LN2(out)
         out = self.relu(out)

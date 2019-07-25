@@ -91,6 +91,7 @@ class Agent(object):
         self.reset()
 
     def reset(self,state = None):
+        self.total_time = 0
         if state is not None:
             self.state = state
         else:

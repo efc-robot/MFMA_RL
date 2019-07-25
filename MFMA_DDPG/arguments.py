@@ -9,15 +9,15 @@ class Args(object):
         parser = argparse.ArgumentParser(description='DDPG on pytorch')
         #Exp & Dir name 
         parser.add_argument('--output', default='results/', type=str, help='result output dir')
-        parser.add_argument('--env', default='MAC_4', type=str, help='open-ai gym environment')
+        parser.add_argument('--env', default='MAC', type=str, help='open-ai gym environment')
         parser.add_argument('--exp-name', default='0', type=str, help='exp dir name')
         parser.add_argument('--result-dir',default=None, type=str, help='whole result dir name')
         
         #Training args
-        parser.add_argument('--nb-epoch', default=100, type=int, help='number of epochs')
-        parser.add_argument('--nb-cycles-per-epoch', default=100, type=int, help='number of cycles per epoch')
+        parser.add_argument('--nb-epoch', default=10, type=int, help='number of epochs')
+        parser.add_argument('--nb-cycles-per-epoch', default=10, type=int, help='number of cycles per epoch')
         parser.add_argument('--nb-rollout-steps', default=100, type=int, help='number rollout steps')
-        parser.add_argument('--nb-train-steps', default=100, type=int, help='number train steps')
+        parser.add_argument('--nb-train-steps', default=500, type=int, help='number train steps')
         #parser.add_argument('--max-episode-length', default=1000, type=int, help='max steps in one episode')
         parser.add_argument('--nb-warmup-steps', default=100, type=int, help='time without training but only filling the replay memory')
         parser.add_argument('--train-mode', default=0, type=int, help='traing mode')
@@ -55,10 +55,6 @@ class Args(object):
         #Other args
         parser.add_argument('--rand-seed', default=314, type=int, help='random_seed')
         
-        
-        parser.add_argument('--mp', dest='multi_process', action='store_true',help='enable multi process')
-        parser.set_defaults(multi_process=False)
-        
         args = parser.parse_args()
         if args.result_dir is None:
             args.result_dir = os.path.join(args.output, args.env, args.exp_name, "{}".format(args.rand_seed))
@@ -79,13 +75,16 @@ class Args(object):
             torch.manual_seed(args.rand_seed)
             numpy.random.seed(args.rand_seed)
         assert  args.action_noise + args.parameter_noise + (args.SGLD_mode is not 0) <= 1
-        args_main  = { key :  args.__dict__[key] for key in ('output','env', 'exp_name', 'result_dir','multi_process','rand_seed')}
+        args_main  = { key :  args.__dict__[key] for key in ('output','env', 'exp_name', 'result_dir','rand_seed')}
         args_model = { key :  args.__dict__[key] for key in ('hidden1', 'hidden2', 'layer_norm')}
-        args_train = { key :  args.__dict__[key] for key in ('nb_epoch', 'nb_cycles_per_epoch', 'nb_rollout_steps', 'nb_train_steps', 'nb_warmup_steps', 'train_mode')}
+        args_train = { key :  args.__dict__[key] for key in ('nb_epoch', 'nb_cycles_per_epoch', 'nb_rollout_steps', 'nb_train_steps', 'nb_warmup_steps','batch_size', 'train_mode')}
         args_exploration = {key : args.__dict__[key] for key in ('action_noise','parameter_noise','stddev','noise_decay','SGLD_mode','SGLD_noise','num_pseudo_batches','nb_rollout_update','temp')}
-        args_agent = { key :  args.__dict__[key] for key in ('actor_lr','critic_lr','lr_decay','l2_critic','batch_size','discount','tau','buffer_size','with_cuda')}
+        args_agent = { key :  args.__dict__[key] for key in ('actor_lr','critic_lr','lr_decay','l2_critic','discount','tau','buffer_size','with_cuda')}
         
         self.args_dict={'main':args_main, 'model':args_model, 'train':args_train, 'exploration':args_exploration, 'agent':args_agent}
+        
     def __call__(self):
         return self.args_dict
+
+
 Singleton_arger = Args()
