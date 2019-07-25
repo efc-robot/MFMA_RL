@@ -1,8 +1,8 @@
 common:
   use_gui : True
   time_limit : 10.0    # maximal time for one episode
-  reset_mode : random
-  #reset_mode : init
+  #reset_mode : random
+  reset_mode : init
   #field_range : [-1.5,1.5,-1.5,1.5]
   field_range : [-2.0,2.0,-2.0,2.0]
   reward_coef :

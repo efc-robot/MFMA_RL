@@ -1,5 +1,5 @@
 common:
-  use_gui : True
+  use_gui : False
   time_limit : 10.0    # maximal time for one episode
   reset_mode : random
   #reset_mode : init
