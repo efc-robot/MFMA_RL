@@ -4,26 +4,6 @@
 #define pi 3.1415926
 using namespace std;
 
-double* hsv2rgb(double h,double s,double v)
-{
-    double h60 = h/60.0;
-    double h60f = floor(h60);
-    int hi =(int)h60f % 6;
-    double f = h60-h60f;
-    double p = v*(1-s);
-    double q = v*(1-f*s);
-    double t = v*(1-(1-f)*s);
-    double r=0,g=0,b=0;
-    if(hi==0) {r=v;g=t;b=p;}
-    else if(hi==1) {r=q;g=v;b=p;}
-    else if(hi==2) {r=p;g=v;b=t;}
-    else if(hi==3) {r=p;g=q;b=v;}
-    else if(hi==4) {r=t;g=p;b=v;}
-    else if(hi==5) {r=v;g=p;b=q;} 
-    static double color[3]={r,g,b};
-    return color;
-};
-
 AgentState::AgentState()
 {
     x = 0;
@@ -75,9 +55,6 @@ Agent::Agent()
     init_target_y = 1;
     AgentState state = AgentState();
     Action action = Action();
-    color[0] = 0;
-    color[1] = 0;
-    color[2] = 0;
     laser_state = new float[N_laser];
     for(int i=0;i<N_laser;i++) laser_state[i] = R_laser;
     reset();
@@ -106,9 +83,6 @@ float init_target_x,float init_target_y)
     this->init_target_y = init_target_y;
     AgentState state = AgentState();
     Action action = Action();
-    color[0] = 0;
-    color[1] = 0;
-    color[2] = 0;
     laser_state = new float[N_laser];
     for(int i=0;i<N_laser;i++) laser_state[i] = R_laser;
     reset();
@@ -228,13 +202,6 @@ World::World(int num,float cfg = 0.1)
 {
     this->num = num;
     agents = new Agent[num];
-    for(int idx=0;idx<num;idx++)
-    {
-        double *color_idx = hsv2rgb(360.0/num*idx,1.0,1.0);
-        agents[idx].color[0]=color_idx[0];
-        agents[idx].color[1]=color_idx[1];
-        agents[idx].color[2]=color_idx[2];
-    }
     dt = cfg;
     cam_range = 4;
     total_time = 0;
@@ -308,6 +275,11 @@ Observation World::get_obs(int obs_idx)
     obs.laser_data = agents[obs_idx].laser_state;
     return obs;
 };
+
+Agent World::get_agent(int agent_idx)
+{
+    return agents[agent_idx];
+}
 
 void World::step()
 {

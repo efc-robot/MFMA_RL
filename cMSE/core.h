@@ -1,8 +1,6 @@
 #ifndef CORE_H
 #define CORE_H
 
-double* hsv2rgb(double,double,double);
-
 struct AgentState
 {
     float x;
@@ -42,7 +40,6 @@ class Agent
         bool check_AA_collisions(Agent);
         bool check_reach();
         float* laser_agent_agent(Agent);
-        double color[3];
         float R_safe;
         float R_reach;
         float L_car;
@@ -74,6 +71,7 @@ class World
         void set_state(int,bool,float,float,float,float,float,bool,bool,bool,float,float);
         AgentState get_state(int);
         Observation get_obs(int);
+        Agent get_agent(int);
         void step();
         void apply_action();
         void update_laser_state();

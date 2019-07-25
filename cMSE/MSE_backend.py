@@ -6,6 +6,31 @@ from . import core
 from multiprocessing import Process, Queue, Manager
 import threading
 import time
+import math
+
+
+
+def hsv2rgb(h, s, v):
+    h = float(h)
+    s = float(s)
+    v = float(v)
+    h60 = h / 60.0
+    h60f = math.floor(h60)
+    hi = int(h60f) % 6
+    f = h60 - h60f
+    p = v * (1 - s)
+    q = v * (1 - f * s)
+    t = v * (1 - (1 - f) * s)
+    r, g, b = 0, 0, 0
+    if hi == 0: r, g, b = v, t, p
+    elif hi == 1: r, g, b = q, v, p
+    elif hi == 2: r, g, b = p, v, t
+    elif hi == 3: r, g, b = p, q, v
+    elif hi == 4: r, g, b = t, p, v
+    elif hi == 5: r, g, b = v, p, q
+    #r, g, b = int(r * 255), int(g * 255), int(b * 255)
+    return (r, g, b)
+
 
 class MSE_backend(object):
     def __init__(self,scenario,fps = 100.0, dt = 0.1):
@@ -13,6 +38,9 @@ class MSE_backend(object):
         self.cfg = {'dt': dt}
         self.use_gui = scenario['common']['use_gui']
         self.fps = fps
+        self.cam_range = 4
+        self.viewer = None
+        self._reset_render()
         self.manager = Manager()
         self.manager_dict = self.manager.dict()
         self.manager_dict['run'] = 'pause'
@@ -20,6 +48,7 @@ class MSE_backend(object):
         self.data_queue = Queue(maxsize = 5)
         self.sub_process = Process(target = self._start_process,args = (self.manager_dict,self.common_queue,self.data_queue))
         self.sub_process.start()
+        
 
     def _fps_func(self,t,event,event_stop):
         while True:
@@ -36,7 +65,99 @@ class MSE_backend(object):
                 break
             event.set()
             time.sleep(1.0/30.0)
+    
+    def _reset_render(self):
+        self.agent_geom_list = None
+    
+    def _render(self, mode='human'):
+        if self.viewer is None:
+            from . import rendering 
+            self.viewer = rendering.Viewer(800,800)
  
+        # create rendering geometry
+        if self.agent_geom_list is None:
+            # import rendering only if we need it (and don't import for headless machines)
+            from . import rendering
+            self.viewer.set_bounds(0-self.cam_range, 0+self.cam_range, 0-self.cam_range, 0+self.cam_range)
+            self.agent_geom_list = []
+            self.agents = []
+            for idx in range(self.agent_number):
+                agent = self.world.get_agent(idx)
+                agent.color = hsv2rgb(360.0/self.agent_number*idx,1.0,1.0)
+                self.agents.append(agent)
+                
+            for agent in self.agents:
+                agent_geom = {}
+                total_xform = rendering.Transform()
+                agent_geom['total_xform'] = total_xform
+                agent_geom['laser_line'] = []
+
+                geom = rendering.make_circle(agent.R_reach)
+                geom.set_color(*agent.color)
+                xform = rendering.Transform()
+                geom.add_attr(xform)
+                agent_geom['target_circle']=(geom,xform)
+
+                N = agent.N_laser
+                for idx_laser in range(N):
+                    theta_i = idx_laser*math.pi*2/N
+                    #d = agent.R_laser
+                    d = 1
+                    end = (math.cos(theta_i)*d, math.sin(theta_i)*d)
+                    geom = rendering.make_line((0, 0),end)
+                    geom.set_color(0.0,1.0,0.0,alpha = 0.5)
+                    xform = rendering.Transform()
+                    geom.add_attr(xform)
+                    geom.add_attr(total_xform)
+                    agent_geom['laser_line'].append((geom,xform))
+                
+                half_l = agent.L_car/2.0
+                half_w = agent.W_car/2.0
+                geom = rendering.make_polygon([[half_l,half_w],[-half_l,half_w],[-half_l,-half_w],[half_l,-half_w]])
+                geom.set_color(*agent.color,alpha = 0.4)
+                xform = rendering.Transform()
+                geom.add_attr(xform)
+                geom.add_attr(total_xform)
+                agent_geom['car']=(geom,xform)
+
+                geom = rendering.make_line((0,0),(half_l,0))
+                geom.set_color(1.0,0.0,0.0,alpha = 1)
+                xform = rendering.Transform()
+                geom.add_attr(xform)
+                geom.add_attr(total_xform)
+                agent_geom['front_line']=(geom,xform)
+                
+                geom = rendering.make_line((0,0),(-half_l,0))
+                geom.set_color(0.0,0.0,0.0,alpha = 1)
+                xform = rendering.Transform()
+                geom.add_attr(xform)
+                geom.add_attr(total_xform)
+                agent_geom['back_line']=(geom,xform)
+
+                self.agent_geom_list.append(agent_geom)
+
+            self.viewer.geoms = []
+            for agent_geom in self.agent_geom_list:
+                self.viewer.add_geom(agent_geom['target_circle'][0])
+                for geom in agent_geom['laser_line']:
+                    self.viewer.add_geom(geom[0])
+                self.viewer.add_geom(agent_geom['car'][0])
+                self.viewer.add_geom(agent_geom['front_line'][0])
+                self.viewer.add_geom(agent_geom['back_line'][0])
+        
+        self.world.update_laser_state()
+        for agent,agent_geom in zip(self.agents,self.agent_geom_list):
+            
+            for idx,laser_line in enumerate(agent_geom['laser_line']):
+                    laser_line[1].set_scale(agent.laser_state[idx],agent.laser_state[idx]) 
+            agent_geom['front_line'][1].set_rotation(agent.state.phi)
+            agent_geom['target_circle'][1].set_translation(agent.state.target_x,agent.state.target_y)
+            agent_geom['total_xform'].set_rotation(agent.state.theta)
+            agent_geom['total_xform'].set_translation(agent.state.x,agent.state.y)
+            
+        return self.viewer.render(return_rgb_array = mode=='rgb_array')
+
+
     def _start_process(self,manager_dict,common_queue,data_queue):
         self.num = 0 
         for (_,agent_group) in self.agent_groups.items():
@@ -66,6 +187,7 @@ class MSE_backend(object):
                 self.world.SetWorld(index,R_safe,R_reach,L_car,W_car,L_axis,R_laser,N_laser,K_vel,K_phi,init_x,
                 init_y,init_theta,init_vel_b,init_phi,init_movable,init_target_x,init_target_y)
                 index = index+1
+        self.agent_number = index
         #self.world = core.World(self.agent_groups,self.cfg)
         self.fps_stop_event = threading.Event()
         self.render_stop_event = threading.Event()
@@ -134,12 +256,19 @@ class MSE_backend(object):
             if self.use_gui:
                 if self.render_event.is_set():
                     self.render_event.clear()
-                    self.world.render()
+                    self._render()
 
     def get_state(self):
         self.common_queue.put(['get_state',None])
         all_state = self.data_queue.get()
         return all_state
+    
+    def set_state(self,state,enable_list = None,reset = False):
+        if reset :
+            self._reset_render()
+        if enable_list is None:
+            enable_list = [True]* len(state)
+        self.common_queue.put(['set_state',(enable_list,state,reset)])
 
     def set_state(self,state,enable_list = None):
         if enable_list is None:
