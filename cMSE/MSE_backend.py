@@ -38,7 +38,35 @@ class MSE_backend(object):
             time.sleep(1.0/30.0)
  
     def _start_process(self,manager_dict,common_queue,data_queue):
-        self.world = core.World(self.agent_groups,self.cfg)
+        self.num = 0 
+        for (_,agent_group) in self.agent_groups.items():
+            self.num = agent_group[0]['num'] + self.num
+        self.world = core.World(self.num,self.cfg['dt'])
+        index = 0
+        for (_,agent_group) in self.agent_groups.items():
+            for agent_prop in agent_group:
+                #print(agent_prop)
+                R_safe = agent_prop['R_safe']
+                R_reach = agent_prop['R_reach']
+                L_car = agent_prop['L_car']
+                W_car = agent_prop['W_car']
+                L_axis = agent_prop['L_axis']
+                R_laser = agent_prop['R_laser']
+                N_laser = agent_prop['N_laser']
+                K_vel = agent_prop['K_vel']
+                K_phi = agent_prop['K_phi']
+                init_x = agent_prop['init_x']
+                init_y = agent_prop['init_y']
+                init_theta = agent_prop['init_theta']
+                init_vel_b = agent_prop['init_vel_b']
+                init_phi = agent_prop['init_phi']
+                init_movable = agent_prop['init_movable']
+                init_target_x = agent_prop['init_target_x']
+                init_target_y = agent_prop['init_target_y']
+                self.world.SetWorld(index,R_safe,R_reach,L_car,W_car,L_axis,R_laser,N_laser,K_vel,K_phi,init_x,
+                init_y,init_theta,init_vel_b,init_phi,init_movable,init_target_x,init_target_y)
+                index = index+1
+        #self.world = core.World(self.agent_groups,self.cfg)
         self.fps_stop_event = threading.Event()
         self.render_stop_event = threading.Event()
         if self.fps != 0:
@@ -64,13 +92,33 @@ class MSE_backend(object):
                     self.render_stop_event.set()
                     break
                 elif item[0] == 'get_state':
-                    data_queue.put([self.world.total_time,self.world.get_state()])
+                    gstate = []
+                    for gstate_idx in range(0,self.num):
+                        gstate.append(self.world.get_state(gstate_idx))
+                    data_queue.put([self.world.total_time,gstate])
                 elif item[0] == 'get_obs':
-                    data_queue.put(self.world.get_obs())
+                    obs = []
+                    for obs_idx in range(0,self.num):
+                        obs.append(self.world.get_obs(obs_idx))
+                    data_queue.put(obs)
                 elif item[0] == 'set_state':
-                    self.world.set_state(item[1][0],item[1][1])
+                    state_num = len(item[1][1])
+                    for state_idx in range(0,state_num):
+                        x = item[1][1][state_idx].x
+                        y = item[1][1][state_idx].y
+                        vel_b = item[1][1][state_idx].vel_b
+                        theta = item[1][1][state_idx].theta
+                        phi = item[1][1][state_idx].phi
+                        movable = item[1][1][state_idx].movable
+                        crash = item[1][1][state_idx].crash
+                        reach = item[1][1][state_idx].reach
+                        target_x = item[1][1][state_idx].target_x
+                        target_y = item[1][1][state_idx].target_y
+                        self.world.set_state(state_idx,item[1][0][state_idx],x,y,vel_b,theta,phi,movable,crash,reach,target_x,target_y)
                 elif item[0] == 'set_action':
-                    self.world.set_action(item[1][0],item[1][1])
+                    action_num = len(item[1][1])
+                    for action_idx in range(0,action_num):
+                        self.world.set_action(action_idx,item[1][0][action_idx],item[1][1][action_idx].ctrl_vel,item[1][1][action_idx].ctrl_phi)
                     
 
             if manager_dict['run'] == 'pause':
