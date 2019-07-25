@@ -4,6 +4,7 @@ import numpy as np
 import math
 import threading
 import time
+from itertools import product
 from .basic import Agent,Action,AgentState
 
 class MultiFidelityEnv(Env):
@@ -15,6 +16,8 @@ class MultiFidelityEnv(Env):
         self.reset_mode = senario_dict['common']['reset_mode']
         self.field_range = senario_dict['common']['field_range']
         self.ref_state_list = []
+        self.ref_agent_list = []
+        self.agent_num = 0
         for (_,grop) in self.senario_dict['agent_groups'].items():
             for agent_prop in grop:
                 agent = Agent(agent_prop)
@@ -28,28 +31,51 @@ class MultiFidelityEnv(Env):
                 state.target_x = agent.init_target_x
                 state.target_y = agent.init_target_y
                 state.crash = False
-                state.reach = False    
+                state.reach = False
                 self.ref_state_list.append(state)
+                self.ref_agent_list.append(agent)
+                self.agent_num+=1
 
     def _random_reset(self,new_state):
         state_list  = copy.deepcopy(new_state)
-        enable_list = [False] * len(state_list)
-        enable_tmp = False
-        for idx,state in enumerate(new_state):
-            if state.reach :
+        enable_list = [state.crash|state.reach for  state in state_list]
+        enable_tmp = True in enable_list
+        
+        crash_idx_list = []
+        for idx ,state in enumerate(state_list):
+            if state.crash: crash_idx_list.append(idx)
+                
+        if len(crash_idx_list)>0:
+            #try random place agent for 20 times
+            for idx in crash_idx_list:
+                state_list[idx].crash = False
+                state_list[idx].movable = True
+            for try_time in range(20):
+                for idx in crash_idx_list:
+                    state_list[idx].x = np.random.uniform(self.field_range[0],self.field_range[1])
+                    state_list[idx].y = np.random.uniform(self.field_range[2],self.field_range[3])
+                no_conflict = True
+                for idx_a,idx_b in product(range(self.agent_num),range(self.agent_num)):
+                    if idx_a == idx_b: continue
+                    state_a = state_list[idx_a]
+                    state_b = state_list[idx_b]
+                    agent_dist = ((state_a.x-state_b.x)**2+(state_a.y-state_b.y)**2)
+                    agent_size = (self.ref_agent_list[idx_a].R_safe+self.ref_agent_list[idx_b].R_safe)**2
+                    no_conflict = agent_dist < agent_size
+                    if not no_conflict : break
+                if no_conflict: break
+
+        reach_idx_list = []
+        for idx ,state in enumerate(state_list):
+            if state.reach: reach_idx_list.append(idx)
+        if len(reach_idx_list)>0:
+            for idx in reach_idx_list:
                 state_list[idx].reach = False
                 state_list[idx].movable = True
                 state_list[idx].target_x = np.random.uniform(self.field_range[0],self.field_range[1])
                 state_list[idx].target_y = np.random.uniform(self.field_range[2],self.field_range[3])
-                enable_list[idx] = True
-                enable_tmp = True
-            if state.crash :
-                state_list[idx].crash = False
-                state_list[idx].movable = True
-                state_list[idx].x = np.random.uniform(self.field_range[0],self.field_range[1])
-                state_list[idx].y = np.random.uniform(self.field_range[2],self.field_range[3])
-                enable_list[idx] = True
-                enable_tmp = True
+
+
         return enable_tmp,state_list,enable_list
 
     def _random_state(self):
