@@ -58,14 +58,16 @@ policy_args['dist'] = 0.1
 
 n_policy = naive_policy(policy_args)
 
-fps = 100.0
-dt = 0.02
-ctrl_fps = 10.0
+fps = 4000.0
+dt = 0.05
+ctrl_fpT = 1.0
+ctrl_fps = fps*dt*ctrl_fpT
 scenario = parse_senario('./scenario/scenario.yaml')
 back_end = MSE_backend.MSE_backend(scenario,fps,dt)
 env = MultiFidelityEnv.MultiFidelityEnv(scenario,back_end)
 env.reset_rollout()
 env.rollout(n_policy.inference,ctrl_fps)
 trajectoy = env.get_trajectoy()
-print(env.get_result())
+delta_time = np.array([a-b for a,b in zip(env.time_history[1:],env.time_history[:-1])])
+print(delta_time.mean()*ctrl_fpT,delta_time.mean(),delta_time.var())
 env.close()

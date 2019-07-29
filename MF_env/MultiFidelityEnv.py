@@ -96,21 +96,17 @@ class MultiFidelityEnv(Env):
                 state_list[idx] = self._random_state()
         return state_list
 
-    def _calc_reward(self,new_state_list,old_state_list,delta_time):
-        reward_list = []
-        for idx in range(len(new_state_list)):
-            new_state = new_state_list[idx]
-            old_state = old_state_list[idx]
-            re = self.reward_coef['time_penalty']*delta_time
-            if new_state.crash:
-                re += self.reward_coef['crash']
-            if new_state.reach:
-                re += self.reward_coef['reach']
-            new_dist = ((new_state.x-new_state.target_x)**2+(new_state.y-new_state.target_y)**2)**0.5
-            old_dist = ((old_state.x-old_state.target_x)**2+(old_state.y-old_state.target_y)**2)**0.5
-            re += self.reward_coef['potential'] * (old_dist-new_dist)
-            reward_list.append(re)
-        return reward_list
+    def _calc_reward(self,new_state,old_state,delta_time):
+        crash = self.reward_coef['crash'] if new_state.crash else 0
+        reach = self.reward_coef['reach'] if new_state.reach else 0
+        new_dist = ((new_state.x-new_state.target_x)**2+(new_state.y-new_state.target_y)**2)**0.5
+        old_dist = ((old_state.x-old_state.target_x)**2+(old_state.y-old_state.target_y)**2)**0.5
+
+        potential = self.reward_coef['potential'] * (old_dist-new_dist)
+        time_penalty = self.reward_coef['time_penalty']*delta_time
+        reward = crash + reach + potential + time_penalty
+        #print(re , crash , reach , potential, time_penalty)
+        return reward
     
     def get_state(self):
         return self.backend.get_state()
@@ -187,12 +183,19 @@ class MultiFidelityEnv(Env):
     def get_trajectoy(self):
         trajectoy = []
         for idx in range(len(self.action_history)):
-            obs = self.obs_history[idx]
-            obs_next = self.obs_history[idx+1]
-            done = [state.movable for state in self.state_history[idx]]
+            obs = []
+            obs_next = []
+            done = []
+            action = []
+            reward = []
             time = self.time_history[idx]
-            action = self.action_history[idx]
-            reward = self._calc_reward(self.state_history[idx],self.state_history[idx+1],self.time_history[idx+1]-self.time_history[idx])
+            for agent_idx in range(len(self.state_history[idx+1])):
+                if self.state_history[idx][agent_idx].movable :
+                    obs.append(self.obs_history[idx][agent_idx])
+                    obs_next.append(self.obs_history[idx+1][agent_idx])
+                    done.append(not  self.state_history[idx+1][agent_idx].movable)
+                    action.append(self.action_history[idx][agent_idx])
+                    reward.append(self._calc_reward(self.state_history[idx+1][agent_idx],self.state_history[idx][agent_idx],self.time_history[idx+1]-self.time_history[idx]))
             transition = {'obs':obs,'action':action,'reward': reward, 'obs_next':obs_next, 'done':done, 'time':time}
             trajectoy.append(copy.deepcopy(transition))
         return trajectoy
@@ -202,13 +205,14 @@ class MultiFidelityEnv(Env):
         result = {}
         crash_time = 0
         reach_time = 0
-        for state_list in self.state_history:
-            for state in state_list:
+        for list_idx in range(len(self.state_history)):
+            state_list = self.state_history[list_idx]
+            for state_idx in range(len(state_list)):
+                state = state_list[state_idx]
                 vel_list.append(abs(state.vel_b))
-                if state.crash:
-                    crash_time+=1
-                if state.reach:
-                    reach_time+=1
+                if list_idx>0:
+                    crash_time += 1 if state.crash and not self.state_history[list_idx-1][state_idx].crash else 0
+                    reach_time += 1 if state.reach and not self.state_history[list_idx-1][state_idx].reach else 0
         result['crash_time'] = crash_time
         result['reach_time'] = reach_time
         result['mean_vel'] = sum(vel_list)/len(vel_list)

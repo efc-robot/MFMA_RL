@@ -22,13 +22,14 @@ class DDPG_trainer(object):
         self.train_mode = train_args['train_mode']
         self.batch_size = train_args['batch_size']
 
-    def setup(self,env_instance,eval_env_instance,agent,memory):
+    def setup(self,env_instance,eval_env_instance,agent,memory,ctrl_fps):
         main_args = Singleton_arger()['main']
         Singleton_logger.setup(main_args['result_dir'])
         self.env = env_instance
         self.eval_env = eval_env_instance
         self.agent = agent
         self.memory = memory
+        self.ctrl_fps = ctrl_fps
         self.result_dir = main_args['result_dir']
     
     def train(self):
@@ -37,9 +38,12 @@ class DDPG_trainer(object):
             for cycle in range(self.nb_cycles_per_epoch):
                 total_cycle+=1
                 self.env.reset_rollout()
-                rollout_policy = policy.NN_policy(self.agent.actor,10.0/(epoch+10.0))
-                self.env.rollout(rollout_policy.inference, 10)
+                rollout_policy = policy.NN_policy(self.agent.actor,10.0/(total_cycle+10.0))
+                self.env.rollout(rollout_policy.inference, self.ctrl_fps)
                 trajectoy = self.env.get_trajectoy()
+                results = self.env.get_result()
+                for key,value in results.items():
+                    Singleton_logger.add_scalar('train'+key,value,total_cycle)
                 for traj in (trajectoy):
                     for idx_agent in range(len(traj['done'])):
                         self.memory.append( [traj['obs'][idx_agent].pos,traj['obs'][idx_agent].laser_data], 
@@ -54,11 +58,11 @@ class DDPG_trainer(object):
                 
             self.eval_env.reset_rollout()
             rollout_policy = policy.NN_policy(self.agent.actor,0)
-            self.eval_env.rollout(rollout_policy.inference, 10)
+            self.eval_env.rollout(rollout_policy.inference, self.ctrl_fps)
             results = self.eval_env.get_result()
             print(results)
             for key,value in results.items():
-                Singleton_logger.add_scalar(key,value,total_cycle)
+                Singleton_logger.add_scalar('eval'+key,value,total_cycle)
             Singleton_logger.save_dict()
             self.agent.save_model(self.result_dir)
 
