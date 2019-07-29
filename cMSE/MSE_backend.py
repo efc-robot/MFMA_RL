@@ -33,7 +33,7 @@ def hsv2rgb(h, s, v):
 
 
 class MSE_backend(object):
-    def __init__(self,scenario,fps = 100.0, dt = 0.1):
+    def __init__(self,scenario,fps = 0.0, dt = 0.1):
         self.agent_groups = scenario['agent_groups']
         self.cfg = {'dt': dt}
         self.use_gui = scenario['common']['use_gui']
@@ -73,18 +73,18 @@ class MSE_backend(object):
         if self.viewer is None:
             from . import rendering 
             self.viewer = rendering.Viewer(800,800)
- 
+        self.agents = []
+        for idx in range(self.agent_number):
+            agent = self.world.get_agent(idx)
+            agent.color = hsv2rgb(360.0/self.agent_number*idx,1.0,1.0)
+            self.agents.append(agent)
         # create rendering geometry
         if self.agent_geom_list is None:
             # import rendering only if we need it (and don't import for headless machines)
             from . import rendering
             self.viewer.set_bounds(0-self.cam_range, 0+self.cam_range, 0-self.cam_range, 0+self.cam_range)
             self.agent_geom_list = []
-            self.agents = []
-            for idx in range(self.agent_number):
-                agent = self.world.get_agent(idx)
-                agent.color = hsv2rgb(360.0/self.agent_number*idx,1.0,1.0)
-                self.agents.append(agent)
+            
                 
             for agent in self.agents:
                 agent_geom = {}
@@ -144,7 +144,6 @@ class MSE_backend(object):
                 self.viewer.add_geom(agent_geom['car'][0])
                 self.viewer.add_geom(agent_geom['front_line'][0])
                 self.viewer.add_geom(agent_geom['back_line'][0])
-        
         self.world.update_laser_state()
         for agent,agent_geom in zip(self.agents,self.agent_geom_list):
             
@@ -216,7 +215,19 @@ class MSE_backend(object):
                 elif item[0] == 'get_state':
                     gstate = []
                     for gstate_idx in range(0,self.num):
-                        gstate.append(self.world.get_state(gstate_idx))
+                        state_c = self.world.get_state(gstate_idx)
+                        state_py = basic.AgentState()
+                        state_py.x = state_c.x
+                        state_py.y = state_c.y
+                        state_py.vel_b = state_c.vel_b
+                        state_py.theta = state_c.theta
+                        state_py.phi = state_c.phi
+                        state_py.movable = state_c.movable
+                        state_py.crash = state_c.crash
+                        state_py.reach = state_c.reach
+                        state_py.target_x = state_c.target_x
+                        state_py.target_y = state_c.target_y
+                        gstate.append(state_py)
                     data_queue.put([self.world.total_time,gstate])
                 elif item[0] == 'get_obs':
                     obs = []

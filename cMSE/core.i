@@ -5,6 +5,11 @@
 
 #ifndef CORE_H
 #define CORE_H
+%include "std_vector.i"
+namespace std {
+  %template(FloatVector) vector<float>;
+}
+using namespace std;
 
 struct AgentState
 {
@@ -31,7 +36,7 @@ struct Action
 struct Observation
 {
     float pos[5];
-    float *laser_data;   //float*n
+    vector<float>laser_data;   //float*n
     Observation();
 };
 
@@ -44,7 +49,7 @@ class Agent
         void reset();
         bool check_AA_collisions(Agent);
         bool check_reach();
-        float* laser_agent_agent(Agent);
+        vector<float> laser_agent_agent(Agent);
         float R_safe;
         float R_reach;
         float L_car;
@@ -64,7 +69,7 @@ class Agent
         float init_target_y;
         AgentState state;
         Action action;
-        float *laser_state;
+        vector<float>laser_state;
 };
 
 class World

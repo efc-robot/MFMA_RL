@@ -1,8 +1,4 @@
 #include"core.h"
-#include<iostream>
-#include<cmath>
-#define pi 3.1415926
-using namespace std;
 
 AgentState::AgentState()
 {
@@ -31,7 +27,6 @@ Observation::Observation()
     pos[2] = 0;
     pos[3] = 0;
     pos[4] = 0;
-    laser_data = NULL;
 };
 
 Agent::Agent()
@@ -55,8 +50,7 @@ Agent::Agent()
     init_target_y = 1;
     AgentState state = AgentState();
     Action action = Action();
-    laser_state = new float[N_laser];
-    for(int i=0;i<N_laser;i++) laser_state[i] = R_laser;
+    for(int i=0;i<N_laser;i++) laser_state.push_back(R_laser);
     reset();
 };
 
@@ -83,8 +77,7 @@ float init_target_x,float init_target_y)
     this->init_target_y = init_target_y;
     AgentState state = AgentState();
     Action action = Action();
-    laser_state = new float[N_laser];
-    for(int i=0;i<N_laser;i++) laser_state[i] = R_laser;
+    for(int i=0;i<N_laser;i++) laser_state.push_back(R_laser);
     reset();
 };
 
@@ -104,7 +97,6 @@ void Agent::reset()
     state.movable = init_movable;
     state.crash = false;
     state.reach = false;
-    laser_state = new float[N_laser];
     for(int i=0;i<N_laser;i++) laser_state[i] = R_laser;
 };
 
@@ -122,18 +114,18 @@ bool Agent::check_reach()
     return at_dist<=max_dist;
 };
 
-float* Agent::laser_agent_agent(Agent agent_b)
+vector<float> Agent::laser_agent_agent(Agent agent_b)
 {
     float R = R_laser;
     int N = N_laser;
-    float *l_laser = new float[N];
-    for(int i=0;i<N;i++) l_laser[i] = R;
+    vector<float>l_laser;
+    for(int i=0;i<N;i++) l_laser.push_back(R);
     float o_pos[2] = {state.x,state.y};
     float oi_pos[2] = {agent_b.state.x,agent_b.state.y};
     float l1 = sqrt((o_pos[0]-oi_pos[0])*(o_pos[0]-oi_pos[0])+(o_pos[1]-oi_pos[1])*(o_pos[1]-oi_pos[1]));
     float l2 = R + sqrt(agent_b.L_car*agent_b.L_car + agent_b.W_car*agent_b.W_car)/2.0;
     if(l1>l2) return l_laser;
-    float theta = state.theta;
+    float theta = this->state.theta;
     float theta_b = agent_b.state.theta;
     float cthb = cos(theta_b);
     float sthb = sin(theta_b);
@@ -180,12 +172,12 @@ float* Agent::laser_agent_agent(Agent agent_b)
         laser_idx_end = ceil(laser_idx_end);
         for(int laser_idx=laser_idx_start;laser_idx<laser_idx_end+1;laser_idx++)
         {
-            laser_idx = laser_idx%N;
+            int laser_idx_ = laser_idx%N;
             float x1 = start_point[0];
             float y1 = start_point[1];
             float x2 = end_point[0];
             float y2 = end_point[1];
-            float theta_i = theta+laser_idx*2*pi/N;
+            float theta_i = theta+laser_idx_*2*pi/N;
             float cthi = cos(theta_i);
             float sthi = sin(theta_i);
             float temp = (y1-y2)*cthi-(x1-x2)*sthi;
@@ -314,7 +306,7 @@ void World::update_laser_state()
         for(int idx_b=0;idx_b<num;idx_b++)
         {
             if(idx_a==idx_b) continue;
-            float *l_laser = agents[idx_a].laser_agent_agent(agents[idx_b]);
+            vector<float>l_laser = agents[idx_a].laser_agent_agent(agents[idx_b]);
             for(int j=0;j<agents[idx_a].N_laser;j++) agents[idx_a].laser_state[j] = min(agents[idx_a].laser_state[j],l_laser[j]);
         }
     }
@@ -352,7 +344,7 @@ void World::integrate_state()
         _yb += _delta_yeta*sth + _delta_tao*cth;
         _theta += _delta_theta;
         float fdec = (_theta/pi) - (int)(_theta/pi);
-        _theta = (int)(_theta/pi)%2*pi+fdec;
+        _theta = (int)(_theta/pi)%2*pi+fdec*pi;
         agents[i].state.x = _xb+cos(_theta)*_L/2.0;
         agents[i].state.y = _yb+sin(_theta)*_L/2.0;
         agents[i].state.theta = _theta;

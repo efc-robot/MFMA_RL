@@ -90,10 +90,183 @@ except AttributeError:
     _newclass = 0
 
 
+class SwigPyIterator(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, SwigPyIterator, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, SwigPyIterator, name)
 
-def hsv2rgb(arg1: 'double', arg2: 'double', arg3: 'double') -> "double *":
-    return _core.hsv2rgb(arg1, arg2, arg3)
-hsv2rgb = _core.hsv2rgb
+    def __init__(self, *args, **kwargs):
+        raise AttributeError("No constructor defined - class is abstract")
+    __repr__ = _swig_repr
+    __swig_destroy__ = _core.delete_SwigPyIterator
+    __del__ = lambda self: None
+
+    def value(self) -> "PyObject *":
+        return _core.SwigPyIterator_value(self)
+
+    def incr(self, n: 'size_t'=1) -> "swig::SwigPyIterator *":
+        return _core.SwigPyIterator_incr(self, n)
+
+    def decr(self, n: 'size_t'=1) -> "swig::SwigPyIterator *":
+        return _core.SwigPyIterator_decr(self, n)
+
+    def distance(self, x: 'SwigPyIterator') -> "ptrdiff_t":
+        return _core.SwigPyIterator_distance(self, x)
+
+    def equal(self, x: 'SwigPyIterator') -> "bool":
+        return _core.SwigPyIterator_equal(self, x)
+
+    def copy(self) -> "swig::SwigPyIterator *":
+        return _core.SwigPyIterator_copy(self)
+
+    def next(self) -> "PyObject *":
+        return _core.SwigPyIterator_next(self)
+
+    def __next__(self) -> "PyObject *":
+        return _core.SwigPyIterator___next__(self)
+
+    def previous(self) -> "PyObject *":
+        return _core.SwigPyIterator_previous(self)
+
+    def advance(self, n: 'ptrdiff_t') -> "swig::SwigPyIterator *":
+        return _core.SwigPyIterator_advance(self, n)
+
+    def __eq__(self, x: 'SwigPyIterator') -> "bool":
+        return _core.SwigPyIterator___eq__(self, x)
+
+    def __ne__(self, x: 'SwigPyIterator') -> "bool":
+        return _core.SwigPyIterator___ne__(self, x)
+
+    def __iadd__(self, n: 'ptrdiff_t') -> "swig::SwigPyIterator &":
+        return _core.SwigPyIterator___iadd__(self, n)
+
+    def __isub__(self, n: 'ptrdiff_t') -> "swig::SwigPyIterator &":
+        return _core.SwigPyIterator___isub__(self, n)
+
+    def __add__(self, n: 'ptrdiff_t') -> "swig::SwigPyIterator *":
+        return _core.SwigPyIterator___add__(self, n)
+
+    def __sub__(self, *args) -> "ptrdiff_t":
+        return _core.SwigPyIterator___sub__(self, *args)
+    def __iter__(self):
+        return self
+SwigPyIterator_swigregister = _core.SwigPyIterator_swigregister
+SwigPyIterator_swigregister(SwigPyIterator)
+
+class FloatVector(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, FloatVector, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, FloatVector, name)
+    __repr__ = _swig_repr
+
+    def iterator(self) -> "swig::SwigPyIterator *":
+        return _core.FloatVector_iterator(self)
+    def __iter__(self):
+        return self.iterator()
+
+    def __nonzero__(self) -> "bool":
+        return _core.FloatVector___nonzero__(self)
+
+    def __bool__(self) -> "bool":
+        return _core.FloatVector___bool__(self)
+
+    def __len__(self) -> "std::vector< float >::size_type":
+        return _core.FloatVector___len__(self)
+
+    def __getslice__(self, i: 'std::vector< float >::difference_type', j: 'std::vector< float >::difference_type') -> "std::vector< float,std::allocator< float > > *":
+        return _core.FloatVector___getslice__(self, i, j)
+
+    def __setslice__(self, *args) -> "void":
+        return _core.FloatVector___setslice__(self, *args)
+
+    def __delslice__(self, i: 'std::vector< float >::difference_type', j: 'std::vector< float >::difference_type') -> "void":
+        return _core.FloatVector___delslice__(self, i, j)
+
+    def __delitem__(self, *args) -> "void":
+        return _core.FloatVector___delitem__(self, *args)
+
+    def __getitem__(self, *args) -> "std::vector< float >::value_type const &":
+        return _core.FloatVector___getitem__(self, *args)
+
+    def __setitem__(self, *args) -> "void":
+        return _core.FloatVector___setitem__(self, *args)
+
+    def pop(self) -> "std::vector< float >::value_type":
+        return _core.FloatVector_pop(self)
+
+    def append(self, x: 'std::vector< float >::value_type const &') -> "void":
+        return _core.FloatVector_append(self, x)
+
+    def empty(self) -> "bool":
+        return _core.FloatVector_empty(self)
+
+    def size(self) -> "std::vector< float >::size_type":
+        return _core.FloatVector_size(self)
+
+    def swap(self, v: 'FloatVector') -> "void":
+        return _core.FloatVector_swap(self, v)
+
+    def begin(self) -> "std::vector< float >::iterator":
+        return _core.FloatVector_begin(self)
+
+    def end(self) -> "std::vector< float >::iterator":
+        return _core.FloatVector_end(self)
+
+    def rbegin(self) -> "std::vector< float >::reverse_iterator":
+        return _core.FloatVector_rbegin(self)
+
+    def rend(self) -> "std::vector< float >::reverse_iterator":
+        return _core.FloatVector_rend(self)
+
+    def clear(self) -> "void":
+        return _core.FloatVector_clear(self)
+
+    def get_allocator(self) -> "std::vector< float >::allocator_type":
+        return _core.FloatVector_get_allocator(self)
+
+    def pop_back(self) -> "void":
+        return _core.FloatVector_pop_back(self)
+
+    def erase(self, *args) -> "std::vector< float >::iterator":
+        return _core.FloatVector_erase(self, *args)
+
+    def __init__(self, *args):
+        this = _core.new_FloatVector(*args)
+        try:
+            self.this.append(this)
+        except Exception:
+            self.this = this
+
+    def push_back(self, x: 'std::vector< float >::value_type const &') -> "void":
+        return _core.FloatVector_push_back(self, x)
+
+    def front(self) -> "std::vector< float >::value_type const &":
+        return _core.FloatVector_front(self)
+
+    def back(self) -> "std::vector< float >::value_type const &":
+        return _core.FloatVector_back(self)
+
+    def assign(self, n: 'std::vector< float >::size_type', x: 'std::vector< float >::value_type const &') -> "void":
+        return _core.FloatVector_assign(self, n, x)
+
+    def resize(self, *args) -> "void":
+        return _core.FloatVector_resize(self, *args)
+
+    def insert(self, *args) -> "void":
+        return _core.FloatVector_insert(self, *args)
+
+    def reserve(self, n: 'std::vector< float >::size_type') -> "void":
+        return _core.FloatVector_reserve(self, n)
+
+    def capacity(self) -> "std::vector< float >::size_type":
+        return _core.FloatVector_capacity(self)
+    __swig_destroy__ = _core.delete_FloatVector
+    __del__ = lambda self: None
+FloatVector_swigregister = _core.FloatVector_swigregister
+FloatVector_swigregister(FloatVector)
+
 class AgentState(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, AgentState, name, value)
@@ -227,12 +400,8 @@ class Agent(_object):
     def check_reach(self) -> "bool":
         return _core.Agent_check_reach(self)
 
-    def laser_agent_agent(self, arg2: 'Agent') -> "float *":
+    def laser_agent_agent(self, arg2: 'Agent') -> "std::vector< float >":
         return _core.Agent_laser_agent_agent(self, arg2)
-    __swig_setmethods__["color"] = _core.Agent_color_set
-    __swig_getmethods__["color"] = _core.Agent_color_get
-    if _newclass:
-        color = _swig_property(_core.Agent_color_get, _core.Agent_color_set)
     __swig_setmethods__["R_safe"] = _core.Agent_R_safe_set
     __swig_getmethods__["R_safe"] = _core.Agent_R_safe_get
     if _newclass:
@@ -346,6 +515,9 @@ class World(_object):
 
     def get_obs(self, arg2: 'int') -> "Observation":
         return _core.World_get_obs(self, arg2)
+
+    def get_agent(self, arg2: 'int') -> "Agent":
+        return _core.World_get_agent(self, arg2)
 
     def step(self) -> "void":
         return _core.World_step(self)
