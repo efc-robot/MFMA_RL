@@ -1,18 +1,18 @@
 common:
   use_gui : False
-  time_limit : 10.0    # maximal time for one episode
+  time_limit : 40.0    # maximal time for one episode
   reset_mode : random
   #reset_mode : init
   #field_range : [-1.5,1.5,-1.5,1.5]
   field_range : [-2.0,2.0,-2.0,2.0]
   reward_coef :
-    reach : 10.0         # reward for reach goal
+    reach : 30.0         # reward for reach goal
     crash : -20.0        # reward for crash
-    time_penalty: -1.0   # time penalty per second
-    potential: 0.1     # coefficient of potential reward
+    time_penalty: -2.0   # time penalty per second
+    potential: 30.0     # coefficient of potential reward
 
 default_agent: &default_agent # default setting
-  R_safe  : 0.28  # minimal distance not crash
+  R_safe  : 0.24  # minimal distance not crash
   R_reach : 0.1  # maximal distance for reach target
   L_car   : 0.4 # length of the car
   W_car   : 0.27  # width of the car
@@ -35,7 +35,7 @@ agent_groups:
     #init_target_x   : [1.0,-1.0,-1.0, 1.0]    # target x coordinate
     #init_target_y   : [1.0, 1.0,-1.0,-1.0]    # target y coordinate
   group_2:
-    num : 8                     # number of agents in group_1:
+    num : 4                     # number of agents in group_1:
     <<: *default_agent          # use default agent setting
     init_x     : 0
     init_y     : 0

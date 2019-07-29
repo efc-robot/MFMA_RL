@@ -14,13 +14,13 @@ class Args(object):
         parser.add_argument('--result-dir',default=None, type=str, help='whole result dir name')
         
         #Training args
-        parser.add_argument('--nb-epoch', default=10, type=int, help='number of epochs')
+        parser.add_argument('--nb-epoch', default=1000, type=int, help='number of epochs')
         parser.add_argument('--nb-cycles-per-epoch', default=10, type=int, help='number of cycles per epoch')
         parser.add_argument('--nb-rollout-steps', default=100, type=int, help='number rollout steps')
         parser.add_argument('--nb-train-steps', default=500, type=int, help='number train steps')
         #parser.add_argument('--max-episode-length', default=1000, type=int, help='max steps in one episode')
         parser.add_argument('--nb-warmup-steps', default=100, type=int, help='time without training but only filling the replay memory')
-        parser.add_argument('--train-mode', default=0, type=int, help='traing mode')
+        parser.add_argument('--train-mode', default=1, type=int, help='traing mode')
         
         #Model args
         parser.add_argument('--hidden1', default=64, type=int, help='number of hidden1')
@@ -34,7 +34,7 @@ class Args(object):
         parser.add_argument('--lr-decay', default=0, type=float, help='critic lr decay')
         parser.add_argument('--l2-critic', default=0.01, type=float, help='critic l2 regularization')
         parser.add_argument('--batch-size', default=128, type=int, help='minibatch size')
-        parser.add_argument('--discount', default=0.95, type=float, help='reward discout')
+        parser.add_argument('--discount', default=0.90, type=float, help='reward discout')
         parser.add_argument('--tau', default=0.001, type=float, help='moving average for target network')
         parser.add_argument('--nocuda', dest='with_cuda', action='store_false',help='disable cuda')
         parser.set_defaults(with_cuda=True)

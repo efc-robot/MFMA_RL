@@ -66,7 +66,7 @@ class naive_policy(object):
 class RVO_policy(object):
     def __init__(self):
         self.max_phi = math.pi/6.0
-        self.l = 0.4
+        self.l = 0.14
         self.dist = 0.1
         self.min_r = self.l/np.tan(self.max_phi)
         self.right_o = np.array([self.min_r,0.0])
