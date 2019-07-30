@@ -33,6 +33,8 @@ class core:
         self.scenario = scenario
         self.l_axis = 0.288
         self.AGENT_NUMBER = self.scenario['agent_groups']['group_1'][0]['num']
+        self.R_safe = self.scenario['agent_groups']['group_1'][0]['R_safe']
+        self.R_reach = self.scenario['agent_groups']['group_1'][0]['R_reach']
         self.x = [0.0]*self.AGENT_NUMBER
         self.y = [0.0]*self.AGENT_NUMBER
         self.theta = [0.0]*self.AGENT_NUMBER
@@ -164,12 +166,12 @@ class core:
             # get crash
             for i in range(self.AGENT_NUMBER):
                 for j in range(i+1,self.AGENT_NUMBER):
-                    if self.near(self.x[i],self.y[i],self.x[j],self.y[j]) == True:
+                    if self.near(self.x[i],self.y[i],self.x[j],self.y[j],self.R_safe) == True:
                         self.crash[i]=True
                         self.crash[j]=True
             # get reach
             for i in range(self.AGENT_NUMBER):
-                if self.near(self.x[i],self.y[i],self.xt[i],self.yt[i]) == True:
+                if self.near(self.x[i],self.y[i],self.xt[i],self.yt[i],self.R_reach) == True:
                     self.reach[i]=True
             # get moveable 
             for i in range(self.AGENT_NUMBER):
@@ -242,42 +244,6 @@ class core:
         self.laser[agentID-1]=LaserScan
         #print(type(self.laser_tem[0]))
 
-    '''def get_obs(self):
-        rospy.wait_for_service('agent_obs')
-        all_obs = rospy.ServiceProxy('agent_obs',agent_obs)
-        obs = all_obs(True)
-        obs_list = [{}]*self.AGENT_NUMBER
-        for i in range(self.AGENT_NUMBER):
-            obs_list[i]['x'] = obs.x[i]
-            obs_list[i]['y'] = obs.y[i]
-            obs_list[i]['theta'] = obs.theta[i]
-            obs_list[i]['xt'] = obs.xt[i]
-            obs_list[i]['yt'] = obs.yt[i]
-            obs_list[i]['laser'] = obs.all_laser[i]
-        return obs_list'''
-
-    '''def get_state(self):
-        rospy.wait_for_service('agent_state')
-        all_state = rospy.ServiceProxy('agent_state',agent_state)
-        obs = all_state(True)
-        state_list = [{}]*self.AGENT_NUMBER
-        for i in range(self.AGENT_NUMBER):
-            state_list[i]['x'] = obs.x[i]
-            state_list[i]['y'] = obs.y[i]
-            state_list[i]['theta'] = obs.theta[i]
-            state_list[i]['vb'] = obs.vb[i]
-            state_list[i]['phi'] = obs.phi[i]
-            state_list[i]['xt'] = obs.xt[i]
-            state_list[i]['yt'] = obs.yt[i]
-            state_list[i]['moveable'] = obs.moveable[i]
-            state_list[i]['crash'] = obs.crash[i]
-            state_list[i]['reach'] = obs.reach[i]
-        #get sim_time
-        rospy.wait_for_service('/gazebo/get_world_properties')
-        sim_time = rospy.ServiceProxy('/gazebo/get_world_properties',GetWorldProperties)
-        obs = sim_time()
-        return [obs,state_list]'''
-
     def pause(self):
         rospy.wait_for_service('/gazebo/pause_physics')
         pause_physics_client = rospy.ServiceProxy('/gazebo/pause_physics',Empty)
@@ -310,19 +276,7 @@ class core:
             rospy.loginfo('Success sending')
         return [self.vb_tem,self.phi_tem]
 
-    '''def handle_func_state(self,req):
-        if req.request == True:
-            rospy.loginfo('Success sending')
-        return [self.x,self.y,self.theta,self.vb,self.phi,self.xt,self.yt,self.moveable,self.crash,self.reach]'''
-
-    '''def handle_func_obs(self,req):
-        if req.request == True:
-            rospy.loginfo('Success sending')
-        #print('Success???')
-        return [self.x,self.y,self.theta,self.xt,self.yt,self.laser]'''
-
-    def near(self,pos1_x,pos1_y,pos2_x,pos2_y):
-        min_distance = 0.5
+    def near(self,pos1_x,pos1_y,pos2_x,pos2_y,min_distance):
         vector1 = np.array([pos1_x,pos1_y])
         vector2 = np.array([pos2_x,pos2_y])
         if np.linalg.norm(vector1-vector2) <= min_distance:

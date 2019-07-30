@@ -11,10 +11,10 @@ if __name__ == '__main__':
 	#gazebo_process = subprocess.Popen('roslaunch gazebo_drl_env 4_agents.launch',shell = True)
 	#time.sleep(10)
 	state = [
-	{'(x,y)':[3.0,3.0],'vb':0.25,'phi':0.588,'theta':0.5,'(xt,yt)':[3.0,3.0],'moveable':True,'crash':False,'reach':False},
-	{'(x,y)':[3.0,-3.0],'vb':0.25,'phi':0.588,'theta':0.5,'(xt,yt)':[3.0,-3.0],'moveable':True,'crash':False,'reach':False},
-	{'(x,y)':[-3.0,3.0],'vb':0.25,'phi':0.588,'theta':0.5,'(xt,yt)':[-3.0,3.0],'moveable':True,'crash':False,'reach':False},
-	{'(x,y)':[-3.0,-3.0],'vb':0.25,'phi':0.588,'theta':0.5,'(xt,yt)':[-3.0,-3.0],'moveable':True,'crash':False,'reach':False},
+	{'(x,y)':[3.0,3.0],'vb':0.0,'phi':0.0,'theta':0.0,'(xt,yt)':[3.0,3.0],'moveable':True,'crash':False,'reach':False},
+	{'(x,y)':[3.0,2.7],'vb':0.0,'phi':0.0,'theta':0.0,'(xt,yt)':[3.0,-3.0],'moveable':True,'crash':False,'reach':False},
+	{'(x,y)':[-3.0,3.0],'vb':0.0,'phi':0.0,'theta':0.0,'(xt,yt)':[-3.0,3.0],'moveable':True,'crash':False,'reach':False},
+	{'(x,y)':[-3.0,-3.0],'vb':0.0,'phi':0.0,'theta':0.0,'(xt,yt)':[-3.0,-3.0],'moveable':True,'crash':False,'reach':False},
 	]
 	state1 = [
 	{'(x,y)':[2.0,2.0],'vb':0.0,'phi':0.0,'theta':0.0,'(xt,yt)':[3.0,3.0],'moveable':True,'crash':False,'reach':False},
