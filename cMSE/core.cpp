@@ -22,11 +22,11 @@ Action::Action()
 
 Observation::Observation()
 {
-    pos[0] = 0;
-    pos[1] = 0;
-    pos[2] = 0;
-    pos[3] = 0;
-    pos[4] = 0;
+    pos_x = 0;
+    pos_y = 0;
+    pos_theta = 0;
+    pos_target_x = 0;
+    pos_target_y = 0;
 };
 
 Agent::Agent()
@@ -259,11 +259,11 @@ Observation World::get_obs(int obs_idx)
     if(obs_idx==0) update_laser_state();
     AgentState state = agents[obs_idx].state;
     Observation obs;
-    obs.pos[0] = state.x;
-    obs.pos[1] = state.y;
-    obs.pos[2] = state.theta;
-    obs.pos[3] = state.target_x;
-    obs.pos[4] = state.target_y;
+    obs.pos_x = state.x;
+    obs.pos_y = state.y;
+    obs.pos_theta = state.theta;
+    obs.pos_target_x = state.target_x;
+    obs.pos_target_y = state.target_y;
     obs.laser_data = agents[obs_idx].laser_state;
     return obs;
 };

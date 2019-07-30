@@ -30,7 +30,11 @@ struct Action
 
 struct Observation
 {
-    float pos[5];
+    float pos_x;
+    float pos_y;
+    float pos_theta;
+    float pos_target_x;
+    float pos_target_y;
     vector<float>laser_data;   //float*n
     Observation();
 };

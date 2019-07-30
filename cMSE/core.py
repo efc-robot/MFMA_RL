@@ -357,10 +357,26 @@ class Observation(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, Observation, name)
     __repr__ = _swig_repr
-    __swig_setmethods__["pos"] = _core.Observation_pos_set
-    __swig_getmethods__["pos"] = _core.Observation_pos_get
+    __swig_setmethods__["pos_x"] = _core.Observation_pos_x_set
+    __swig_getmethods__["pos_x"] = _core.Observation_pos_x_get
     if _newclass:
-        pos = _swig_property(_core.Observation_pos_get, _core.Observation_pos_set)
+        pos_x = _swig_property(_core.Observation_pos_x_get, _core.Observation_pos_x_set)
+    __swig_setmethods__["pos_y"] = _core.Observation_pos_y_set
+    __swig_getmethods__["pos_y"] = _core.Observation_pos_y_get
+    if _newclass:
+        pos_y = _swig_property(_core.Observation_pos_y_get, _core.Observation_pos_y_set)
+    __swig_setmethods__["pos_theta"] = _core.Observation_pos_theta_set
+    __swig_getmethods__["pos_theta"] = _core.Observation_pos_theta_get
+    if _newclass:
+        pos_theta = _swig_property(_core.Observation_pos_theta_get, _core.Observation_pos_theta_set)
+    __swig_setmethods__["pos_target_x"] = _core.Observation_pos_target_x_set
+    __swig_getmethods__["pos_target_x"] = _core.Observation_pos_target_x_get
+    if _newclass:
+        pos_target_x = _swig_property(_core.Observation_pos_target_x_get, _core.Observation_pos_target_x_set)
+    __swig_setmethods__["pos_target_y"] = _core.Observation_pos_target_y_set
+    __swig_getmethods__["pos_target_y"] = _core.Observation_pos_target_y_get
+    if _newclass:
+        pos_target_y = _swig_property(_core.Observation_pos_target_y_get, _core.Observation_pos_target_y_set)
     __swig_setmethods__["laser_data"] = _core.Observation_laser_data_set
     __swig_getmethods__["laser_data"] = _core.Observation_laser_data_get
     if _newclass:
@@ -540,6 +556,10 @@ class World(_object):
     __swig_getmethods__["total_time"] = _core.World_total_time_get
     if _newclass:
         total_time = _swig_property(_core.World_total_time_get, _core.World_total_time_set)
+    __swig_setmethods__["dt"] = _core.World_dt_set
+    __swig_getmethods__["dt"] = _core.World_dt_get
+    if _newclass:
+        dt = _swig_property(_core.World_dt_get, _core.World_dt_set)
     __swig_destroy__ = _core.delete_World
     __del__ = lambda self: None
 World_swigregister = _core.World_swigregister

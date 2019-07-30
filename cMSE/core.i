@@ -35,7 +35,11 @@ struct Action
 
 struct Observation
 {
-    float pos[5];
+    float pos_x;
+    float pos_y;
+    float pos_theta;
+    float pos_target_x;
+    float pos_target_y;
     vector<float>laser_data;   //float*n
     Observation();
 };
@@ -89,9 +93,9 @@ class World
         void check_collisions();
         void check_reach();
         float total_time;
+        float dt;
     private:
         Agent *agents;
-        float dt;
         int cam_range;
         int num;
 };

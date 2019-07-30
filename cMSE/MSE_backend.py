@@ -232,7 +232,12 @@ class MSE_backend(object):
                 elif item[0] == 'get_obs':
                     obs = []
                     for obs_idx in range(0,self.num):
-                        obs.append(self.world.get_obs(obs_idx))
+                        obs_c = self.world.get_obs(obs_idx)
+                        obs_py = basic.Observation()
+                        obs_py.pos = [obs_c.pos_x,obs_c.pos_y,obs_c.pos_theta,obs_c.pos_target_x,obs_c.pos_target_y]
+                        for i in range(0,N_laser):
+                            obs_py.laser_data.append(obs_c.laser_data[i])
+                        obs.append(obs_py)
                     data_queue.put(obs)
                 elif item[0] == 'set_state':
                     state_num = len(item[1][1])
