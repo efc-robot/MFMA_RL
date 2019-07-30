@@ -1,7 +1,7 @@
 import yaml
 def parse_senario(senario_file):
     with open(senario_file) as f:
-        raw_senario_dict = yaml.load(f,Loader=yaml.FullLoader)
+        raw_senario_dict = yaml.load(f)
     assert 'common' in raw_senario_dict.keys() , "senario file has no 'common' propoties"
     senario_dict = {'common':raw_senario_dict['common']}
     # build agent list

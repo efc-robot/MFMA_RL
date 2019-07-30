@@ -1,0 +1,4 @@
+bool request
+
+-----
+sensor_msgs/LaserScan[] all_laser
