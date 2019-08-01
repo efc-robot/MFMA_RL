@@ -6,6 +6,7 @@
 #define pi 3.1415926
 using namespace std;
 
+//states of agents
 struct AgentState
 {
     float x;
@@ -21,6 +22,7 @@ struct AgentState
     AgentState();
 };
 
+//action of the agent
 struct Action
 {
     float ctrl_vel;
@@ -28,6 +30,7 @@ struct Action
     Action();
 };
 
+//observation of the agent, including data of the agent and  the laser
 struct Observation
 {
     float pos_x;
@@ -39,6 +42,7 @@ struct Observation
     Observation();
 };
 
+//properties of agent entities
 class Agent
 {
     public:
@@ -71,6 +75,7 @@ class Agent
         vector<float>laser_state;
 };
 
+//multi-agent world
 class World
 {
     public:

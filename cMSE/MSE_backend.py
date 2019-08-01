@@ -9,7 +9,7 @@ import time
 import math
 
 
-
+#颜色转换，用于gui
 def hsv2rgb(h, s, v):
     h = float(h)
     s = float(s)
@@ -30,7 +30,6 @@ def hsv2rgb(h, s, v):
     elif hi == 5: r, g, b = v, p, q
     #r, g, b = int(r * 255), int(g * 255), int(b * 255)
     return (r, g, b)
-
 
 class MSE_backend(object):
     def __init__(self,scenario,fps = 0.0, dt = 0.1):
@@ -160,9 +159,10 @@ class MSE_backend(object):
     def _start_process(self,manager_dict,common_queue,data_queue):
         self.num = 0 
         for (_,agent_group) in self.agent_groups.items():
-            self.num = agent_group[0]['num'] + self.num
+            self.num = agent_group[0]['num'] + self.num   #计算agent数量
         self.world = core.World(self.num,self.cfg['dt'])
         index = 0
+        #对每个agent调用core中的SetWorld()分别初始化
         for (_,agent_group) in self.agent_groups.items():
             for agent_prop in agent_group:
                 #print(agent_prop)
@@ -187,7 +187,6 @@ class MSE_backend(object):
                 init_y,init_theta,init_vel_b,init_phi,init_movable,init_target_x,init_target_y)
                 index = index+1
         self.agent_number = index
-        #self.world = core.World(self.agent_groups,self.cfg)
         self.fps_stop_event = threading.Event()
         self.render_stop_event = threading.Event()
         if self.fps != 0:
@@ -214,6 +213,7 @@ class MSE_backend(object):
                     break
                 elif item[0] == 'get_state':
                     gstate = []
+                    #将c中的AgentState类拷贝到python中的AgentState类，因为部分python函数不能处理c类型
                     for gstate_idx in range(0,self.num):
                         state_c = self.world.get_state(gstate_idx)
                         state_py = basic.AgentState()
@@ -230,6 +230,7 @@ class MSE_backend(object):
                         gstate.append(state_py)
                     data_queue.put([self.world.total_time,gstate])
                 elif item[0] == 'get_obs':
+                    #将c中Observation的类拷贝到python中的Observation类，因为部分python函数不能处理c类型
                     obs = []
                     for obs_idx in range(0,self.num):
                         obs_c = self.world.get_obs(obs_idx)
@@ -241,6 +242,7 @@ class MSE_backend(object):
                     data_queue.put(obs)
                 elif item[0] == 'set_state':
                     state_num = len(item[1][1])
+                    #将前端传过来的字典解包，把agent的所有属性都设为set_state()的参数
                     for state_idx in range(0,state_num):
                         x = item[1][1][state_idx].x
                         y = item[1][1][state_idx].y

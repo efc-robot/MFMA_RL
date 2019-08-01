@@ -54,6 +54,7 @@ Agent::Agent()
     reset();
 };
 
+//重载的构造函数，实际上用不到，设置agent属性通过World::SetWorld()实现
 Agent::Agent(float R_safe,float R_reach,float L_car,float W_car,float L_axis,float R_laser,int N_laser,float K_vel,
 float K_phi,float init_x,float init_y,float init_theta,float init_vel_b,float init_phi,bool init_movable,
 float init_target_x,float init_target_y)
@@ -100,6 +101,7 @@ void Agent::reset()
     for(int i=0;i<N_laser;i++) laser_state[i] = R_laser;
 };
 
+//判断两车是否碰撞
 bool Agent::check_AA_collisions(Agent agent_b)
 {
     float min_dist = pow((R_safe + agent_b.R_safe),2);
@@ -107,6 +109,7 @@ bool Agent::check_AA_collisions(Agent agent_b)
     return ab_dist <= min_dist;
 };
 
+//判断agent是否到达目的地
 bool Agent::check_reach()
 {
     float max_dist = pow(R_reach,2);
@@ -114,6 +117,7 @@ bool Agent::check_reach()
     return at_dist<=max_dist;
 };
 
+//计算agent的laser对另一个agent的观测数据，返回laser_data数组
 vector<float> Agent::laser_agent_agent(Agent agent_b)
 {
     float R = R_laser;
@@ -190,6 +194,7 @@ vector<float> Agent::laser_agent_agent(Agent agent_b)
     return l_laser;
 };
 
+//world创建的时候会同时创建一个长度为agent数量的Agent数组，但不会同时按照场景文件初始化这些agent
 World::World(int num,float cfg = 0.1)
 {
     this->num = num;
@@ -199,6 +204,7 @@ World::World(int num,float cfg = 0.1)
     total_time = 0;
 };
 
+//通过该函数按照场景文件初始化agent
 void World::SetWorld(int index,float R_safe,float R_reach,float L_car,float W_car,float L_axis,float R_laser,int N_laser,float K_vel,
 float K_phi,float init_x,float init_y,float init_theta,float init_vel_b,float init_phi,bool init_movable,
 float init_target_x,float init_target_y)
@@ -273,6 +279,7 @@ Agent World::get_agent(int agent_idx)
     return agents[agent_idx];
 }
 
+//update state of the world
 void World::step()
 {
     apply_action();
@@ -282,6 +289,7 @@ void World::step()
     total_time += dt;
 };
 
+//gather agent action forces
 void World::apply_action()
 {
     for(int i=0;i<num;i++)
@@ -312,6 +320,7 @@ void World::update_laser_state()
     }
 };
 
+//integrate physical state
 void World::integrate_state()
 {
     for(int i=0;i<num;i++)
